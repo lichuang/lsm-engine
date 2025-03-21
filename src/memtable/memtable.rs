@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::Arc;
+use std::sync::atomic::Ordering;
+use std::sync::{Arc, atomic::AtomicUsize};
 
-use crate::error::Result;
+use anyhow::Result;
 use bytes::Bytes;
 use crossbeam_skiplist::SkipMap;
 
@@ -22,17 +23,22 @@ use crate::base::{KeyBytes, KeySlice};
 
 pub struct Memtable {
     map: Arc<SkipMap<KeyBytes, Bytes>>,
+
+    // since `SkipMap` has no function such as `size()` to
+    // return the total size of the container, we need to accumulate estimate size when writing data
+    approximate_size: Arc<AtomicUsize>,
 }
 
 impl Memtable {
     pub fn new() -> Self {
         Self {
             map: Arc::new(SkipMap::new()),
+            approximate_size: Arc::new(AtomicUsize::new(0)),
         }
     }
 
     pub fn read(&self, key: KeySlice) -> Option<Bytes> {
-        let key = KeyBytes::from_bytes_with_version(
+        let key = KeyBytes::new(
             Bytes::from_static(unsafe { std::mem::transmute::<&[u8], &[u8]>(key.key_ref()) }),
             key.version(),
         );
@@ -44,7 +50,41 @@ impl Memtable {
         self.write_batch(&[(key, value)])
     }
 
-    pub fn write_batch(&self, kvs: &[(KeySlice, &[u8])]) -> Result<()> {
+    pub fn write_batch(&self, data: &[(KeySlice, &[u8])]) -> Result<()> {
+        let mut est_size = 0;
+        for (k, v) in data {
+            est_size += k.raw_len() + v.len();
+            self.map.insert(k.to_key_bytes(), Bytes::copy_from_slice(v));
+        }
+        self.approximate_size.fetch_add(est_size, Ordering::Relaxed);
         Ok(())
+    }
+
+    pub fn size(&self) -> usize {
+        self.approximate_size.load(Ordering::Relaxed)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bytes::Bytes;
+
+    use crate::base::KeyBytes;
+
+    use super::Memtable;
+
+    #[test]
+    fn test_write_and_read() {
+        let table = Memtable::new();
+        let key = KeyBytes::new(Bytes::from("hello"), 1);
+        let value = Bytes::from("world");
+        assert!(table.write(key.to_key_slice(), value.as_ref()).is_ok());
+        let ret = table.read(key.to_key_slice());
+        assert!(ret.is_some_and(|val| {
+            assert_eq!(val, value);
+            true
+        }));
+
+        assert_eq!(table.size(), key.raw_len() + value.len());
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Lichuang
+// Copyright (c) 2025 Lichuang(codedump)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,12 +11,3 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-mod backtrace;
-#[allow(clippy::module_inception)]
-mod error;
-mod error_code;
-
-pub use error::Error;
-use error::ErrorCodeBacktrace;
-pub use error::Result;
