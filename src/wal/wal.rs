@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::base::Error;
 use crate::base::KeySlice;
-use anyhow::Context;
-use anyhow::Result;
+use crate::base::Result;
 use bytes::BufMut;
 use parking_lot::Mutex;
 use std::{
@@ -39,7 +39,10 @@ impl Wal {
                     .write(true)
                     .read(true)
                     .open(path)
-                    .context(format!("fail to open WAL file {:?}", wal_path))?,
+                    .map_err(Error::io_error(format!(
+                        "fail to open WAL file {:?}",
+                        wal_path
+                    )))?,
             ))),
             path: wal_path,
         })
@@ -57,11 +60,19 @@ impl Wal {
         }
         let path = &self.path;
         file.write_all(&(buf.len() as u32).to_be_bytes())
-            .context(format!("failed to write WAL file {} header", path))?;
-        file.write_all(&buf)
-            .context(format!("failed to write WAL file {} content", path))?;
+            .map_err(Error::io_error(format!(
+                "failed to write WAL file {} header",
+                path
+            )))?;
+        file.write_all(&buf).map_err(Error::io_error(format!(
+            "failed to write WAL file {} content",
+            path
+        )))?;
         file.write_all(&crc32fast::hash(&buf).to_be_bytes())
-            .context(format!("failed to write WAL file {} hash", path))?;
+            .map_err(Error::io_error(format!(
+                "failed to write WAL file {} hash",
+                path
+            )))?;
         Ok(())
     }
 

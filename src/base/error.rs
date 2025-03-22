@@ -12,11 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod error;
-mod key;
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("IO error: {context}: {error}")]
+    IOError {
+        context: String,
+        error: std::io::Error,
+    },
+}
 
-pub use key::KeyBytes;
-pub use key::KeySlice;
+impl Error {
+    pub fn io_error(context: impl Into<String>) -> impl FnOnce(std::io::Error) -> Self {
+        move |error| Self::IOError {
+            context: context.into(),
+            error,
+        }
+    }
+}
 
-pub use error::Error;
-pub use error::Result;
+pub type Result<T> = std::result::Result<T, Error>;

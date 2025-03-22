@@ -15,7 +15,7 @@
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, atomic::AtomicUsize};
 
-use anyhow::Result;
+use crate::base::Result;
 use bytes::Bytes;
 use crossbeam_skiplist::SkipMap;
 
