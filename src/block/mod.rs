@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod error;
-mod key;
+#[allow(clippy::module_inception)]
+mod block;
+mod block_builder;
 
-pub use key::KeyBytes;
-pub use key::KeySlice;
-pub use key::KeyVec;
-
-pub use error::Error;
-pub use error::Result;
+pub use block::Block;
+pub use block_builder::BlockBuilder;

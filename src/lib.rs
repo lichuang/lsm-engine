@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod base;
+mod block;
 mod db;
 mod memtable;
 mod wal;

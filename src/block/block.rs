@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod error;
-mod key;
+pub(crate) const SIZEOF_U16: usize = std::mem::size_of::<u16>();
 
-pub use key::KeyBytes;
-pub use key::KeySlice;
-pub use key::KeyVec;
-
-pub use error::Error;
-pub use error::Result;
+pub struct Block {
+    pub(crate) data: Vec<u8>,
+    pub(crate) offsets: Vec<u16>,
+}

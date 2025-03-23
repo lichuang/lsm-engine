@@ -25,6 +25,7 @@ pub struct Key<T: AsRef<[u8]>> {
 
 pub type KeyBytes = Key<Bytes>;
 pub type KeySlice<'a> = Key<&'a [u8]>;
+pub type KeyVec = Key<Vec<u8>>;
 
 impl<T: AsRef<[u8]>> Key<T> {
     pub fn version(&self) -> u64 {
@@ -41,6 +42,10 @@ impl<T: AsRef<[u8]>> Key<T> {
 
     pub fn raw_len(&self) -> usize {
         self.key.as_ref().len() + std::mem::size_of::<u64>()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.key.as_ref().is_empty()
     }
 }
 
@@ -61,6 +66,22 @@ impl<'a> KeySlice<'a> {
     pub fn to_key_bytes(&self) -> KeyBytes {
         KeyBytes::new(self.key.to_vec().into(), self.version)
     }
+
+    pub fn to_key_vec(&self) -> KeyVec {
+        KeyVec {
+            key: self.key.to_vec(),
+            version: self.version,
+        }
+    }
+}
+
+impl KeyVec {
+    pub fn to_key_slice(&self) -> KeySlice {
+        KeySlice {
+            key: self.key.as_ref(),
+            version: self.version,
+        }
+    }
 }
 
 impl<T: AsRef<[u8]> + Debug> Debug for Key<T> {
@@ -77,6 +98,17 @@ impl<T: AsRef<[u8]> + Default> Default for Key<T> {
         }
     }
 }
+
+impl<T: AsRef<[u8]> + Clone> Clone for Key<T> {
+    fn clone(&self) -> Self {
+        Self {
+            key: self.key.clone(),
+            version: self.version,
+        }
+    }
+}
+
+impl<T: AsRef<[u8]> + Copy> Copy for Key<T> {}
 
 impl<T: AsRef<[u8]> + PartialEq> PartialEq for Key<T> {
     fn eq(&self, other: &Self) -> bool {
