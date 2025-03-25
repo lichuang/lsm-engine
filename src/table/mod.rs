@@ -13,4 +13,5 @@
 // limitations under the License.
 
 #[allow(clippy::module_inception)]
-mod memtable;
+mod table;
+mod table_builder;

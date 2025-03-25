@@ -16,4 +16,5 @@ mod base;
 mod block;
 mod db;
 mod memtable;
+mod table;
 mod wal;
