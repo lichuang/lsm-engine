@@ -19,11 +19,39 @@ pub enum Error {
         context: String,
         error: std::io::Error,
     },
+
+    #[error("Filter error: {context}: {error}")]
+    FilterError {
+        context: String,
+        error: tinysearch_cuckoofilter::CuckooError,
+    },
+
+    #[error("bincode ser/der error: {context}: {error}")]
+    SerDerError {
+        context: String,
+        error: bincode::Error,
+    },
 }
 
 impl Error {
     pub fn io_error(context: impl Into<String>) -> impl FnOnce(std::io::Error) -> Self {
         move |error| Self::IOError {
+            context: context.into(),
+            error,
+        }
+    }
+
+    pub fn filter_error(
+        context: impl Into<String>,
+    ) -> impl FnOnce(tinysearch_cuckoofilter::CuckooError) -> Self {
+        move |error| Self::FilterError {
+            context: context.into(),
+            error,
+        }
+    }
+
+    pub fn serder_error(context: impl Into<String>) -> impl FnOnce(bincode::Error) -> Self {
+        move |error| Self::SerDerError {
             context: context.into(),
             error,
         }

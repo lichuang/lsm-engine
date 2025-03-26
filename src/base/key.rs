@@ -16,19 +16,20 @@ use std::fmt::Debug;
 
 use bytes::Bytes;
 
-pub const VERSION_DEFAULT: u64 = 0;
+pub const VERSION_DEFAULT: Version = 0;
 
 pub struct Key<T: AsRef<[u8]>> {
     key: T,
-    version: u64,
+    version: Version,
 }
 
+pub type Version = u64;
 pub type KeyBytes = Key<Bytes>;
 pub type KeySlice<'a> = Key<&'a [u8]>;
 pub type KeyVec = Key<Vec<u8>>;
 
 impl<T: AsRef<[u8]>> Key<T> {
-    pub fn version(&self) -> u64 {
+    pub fn version(&self) -> Version {
         self.version
     }
 
@@ -50,7 +51,7 @@ impl<T: AsRef<[u8]>> Key<T> {
 }
 
 impl KeyBytes {
-    pub fn new(key: Bytes, version: u64) -> Self {
+    pub fn new(key: Bytes, version: Version) -> Self {
         Self { key, version }
     }
 
@@ -76,9 +77,30 @@ impl<'a> KeySlice<'a> {
 }
 
 impl KeyVec {
+    pub fn new() -> Self {
+        Self {
+            key: Vec::new(),
+            version: VERSION_DEFAULT,
+        }
+    }
+
     pub fn to_key_slice(&self) -> KeySlice {
         KeySlice {
             key: self.key.as_ref(),
+            version: self.version,
+        }
+    }
+
+    pub fn from_key_slice(slice: &KeySlice) -> Self {
+        Self {
+            key: slice.key.to_vec(),
+            version: slice.version,
+        }
+    }
+
+    pub fn to_key_bytes(&self) -> KeyBytes {
+        KeyBytes {
+            key: self.key.to_vec().into(),
             version: self.version,
         }
     }

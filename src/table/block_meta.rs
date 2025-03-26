@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod block_meta;
-#[allow(clippy::module_inception)]
-mod table;
-mod table_builder;
+use crate::base::KeyBytes;
 
-pub(crate) use block_meta::BlockMeta;
-pub use table::SsTable;
-pub use table_builder::SsTableBuilder;
+pub struct BlockMeta {
+    // Offset of this block in Sstable
+    pub offset: usize,
+
+    // The first key of block
+    pub first_key: KeyBytes,
+
+    // The last key of block
+    pub last_key: KeyBytes,
+}
+
+impl BlockMeta {}

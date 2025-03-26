@@ -18,6 +18,8 @@ mod key;
 pub use key::KeyBytes;
 pub use key::KeySlice;
 pub use key::KeyVec;
+pub use key::VERSION_DEFAULT;
+pub use key::Version;
 
 pub use error::Error;
 pub use error::Result;
