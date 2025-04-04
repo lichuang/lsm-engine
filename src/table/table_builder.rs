@@ -26,6 +26,8 @@ use crate::table::SsTable;
 
 use crate::table::BlockMeta;
 
+use super::BlockMetaVec;
+
 pub struct SsTableBuilder {
     block_builder: BlockBuilder,
     filter: CuckooFilter<farmhash::FarmHasher>,
@@ -35,7 +37,7 @@ pub struct SsTableBuilder {
 
     data: Vec<u8>,
 
-    block_meta: Vec<BlockMeta>,
+    block_meta: BlockMetaVec,
 
     max_version: Version,
 
@@ -52,7 +54,7 @@ impl SsTableBuilder {
             last_key: KeyVec::new(),
 
             data: Vec::new(),
-            block_meta: Vec::new(),
+            block_meta: BlockMetaVec::new(),
 
             max_version: VERSION_DEFAULT,
             block_size,
@@ -69,6 +71,7 @@ impl SsTableBuilder {
             .add(&farmhash::fingerprint32(key.key_ref()))
             .map_err(Error::filter_error("insert key into filter error"))?;
 
+        // if the block is not full, `add` return true
         if self.block_builder.add(key, value) {
             self.last_key = KeyVec::from_key_slice(&key);
             return Ok(());
@@ -79,13 +82,14 @@ impl SsTableBuilder {
         self.finalize();
 
         // then add data to the next block
-        self.block_builder.add(key, value);
+        assert!(self.block_builder.add(key, value));
         self.first_key = KeyVec::from_key_slice(&key);
         self.last_key = KeyVec::from_key_slice(&key);
 
         Ok(())
     }
 
+    // save [encoded block + block checksum(u32)] into data buffer
     fn finalize(&mut self) {
         let block_builder =
             std::mem::replace(&mut self.block_builder, BlockBuilder::new(self.block_size));
@@ -96,13 +100,17 @@ impl SsTableBuilder {
             first_key: self.first_key.to_key_bytes(),
             last_key: self.last_key.to_key_bytes(),
         });
-        let block_checksum = crc32fast::hash(&encoded_block);
+        let checksum = crc32fast::hash(&encoded_block);
         self.data.extend(encoded_block);
-        self.data.put_u32(block_checksum);
+        self.data.put_u32(checksum);
     }
 
     pub fn build(mut self) -> Result<SsTable> {
+        self.finalize();
         let mut data = self.data;
+
+        // save block meta
+        let meta_offset = data.len();
 
         let export_filter = self.filter.export();
         let filter_data = bincode::serialize(&export_filter)

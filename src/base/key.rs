@@ -14,7 +14,7 @@
 
 use std::fmt::Debug;
 
-use bytes::Bytes;
+use bytes::{Buf, BufMut, Bytes};
 
 pub const VERSION_DEFAULT: Version = 0;
 
@@ -60,6 +60,20 @@ impl KeyBytes {
             key: self.key.as_ref(),
             version: self.version,
         }
+    }
+
+    pub fn encode(&self, buf: &mut Vec<u8>) {
+        buf.put_u16(self.key.as_ref().len() as u16);
+        buf.put_slice(self.key.as_ref());
+        buf.put_u64(self.version);
+    }
+
+    pub fn decode(mut buf: &[u8]) -> (Self, &[u8]) {
+        let len = buf.get_u16() as usize;
+        let key = buf.copy_to_bytes(len);
+        let version = buf.get_u64();
+
+        (Self { key, version }, buf)
     }
 }
 

@@ -31,6 +31,9 @@ pub enum Error {
         context: String,
         error: bincode::Error,
     },
+
+    #[error("block meta error: {context}")]
+    BlockError { context: String },
 }
 
 impl Error {
@@ -54,6 +57,12 @@ impl Error {
         move |error| Self::SerDerError {
             context: context.into(),
             error,
+        }
+    }
+
+    pub fn block_meta_error(context: impl Into<String>) -> Self {
+        Self::BlockError {
+            context: context.into(),
         }
     }
 }
