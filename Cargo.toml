@@ -1,11 +1,11 @@
 [package]
-name = "puppydb"
+name = "lsm-engine"
 version = "0.1.0"
 edition = "2021"
-homepage = "https://github.com/lichuang/puppydb"
+homepage = "https://github.com/lichuang/lsm-engine"
 keywords = ["storage", "lsm"]
 license = "Apache-2.0"
-repository = "https://github.com/lichuang/puppydb"
+repository = "https://github.com/lichuang/lsm-engine"
 
 [dependencies]
 backtrace = "0.3.73"
