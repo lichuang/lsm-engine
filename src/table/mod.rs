@@ -20,4 +20,6 @@ mod table_builder;
 pub(crate) use block_meta::BlockMeta;
 pub(crate) use block_meta::BlockMetaVec;
 pub use table::SsTable;
+pub use table::SsTableId;
+pub use table::SsTableMeta;
 pub use table_builder::SsTableBuilder;

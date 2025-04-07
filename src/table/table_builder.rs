@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::path::Path;
+
 use crate::base::Error;
 use crate::base::KeySlice;
 use crate::base::KeyVec;
@@ -27,6 +29,8 @@ use crate::table::SsTable;
 use crate::table::BlockMeta;
 
 use super::BlockMetaVec;
+use super::SsTableId;
+use super::SsTableMeta;
 
 pub struct SsTableBuilder {
     block_builder: BlockBuilder,
@@ -37,7 +41,7 @@ pub struct SsTableBuilder {
 
     data: Vec<u8>,
 
-    block_meta: BlockMetaVec,
+    block_meta_vec: BlockMetaVec,
 
     max_version: Version,
 
@@ -54,7 +58,7 @@ impl SsTableBuilder {
             last_key: KeyVec::new(),
 
             data: Vec::new(),
-            block_meta: BlockMetaVec::new(),
+            block_meta_vec: BlockMetaVec::new(),
 
             max_version: VERSION_DEFAULT,
             block_size,
@@ -95,7 +99,7 @@ impl SsTableBuilder {
             std::mem::replace(&mut self.block_builder, BlockBuilder::new(self.block_size));
         let encoded_block = block_builder.finalize().encode();
         // save block meta
-        self.block_meta.push(BlockMeta {
+        self.block_meta_vec.push(BlockMeta {
             offset: self.data.len(),
             first_key: self.first_key.to_key_bytes(),
             last_key: self.last_key.to_key_bytes(),
@@ -105,18 +109,36 @@ impl SsTableBuilder {
         self.data.put_u32(checksum);
     }
 
-    pub fn build(mut self) -> Result<SsTable> {
+    pub fn build(mut self, id: SsTableId, path: impl AsRef<Path>) -> Result<SsTable> {
         self.finalize();
         let mut data = self.data;
 
-        // save block meta
-        let meta_offset = data.len();
+        // save block meta vectors
+        let block_meta_offset = data.len();
+        self.block_meta_vec.encode(self.max_version, &mut data);
+        data.put_u32(block_meta_offset as u32);
 
+        // save filter data
         let export_filter = self.filter.export();
         let filter_data = bincode::serialize(&export_filter)
             .map_err(Error::serder_error("serialize filter data error"))?;
         data.extend(&filter_data);
+        let filter_offset = data.len();
+        data.put_u32(filter_offset as u32);
 
-        Ok(SsTable {})
+        // create sstable meta
+        let table_meta = SsTableMeta {
+            id,
+            first_key: self.first_key.clone(),
+            last_key: self.last_key.clone(),
+            block_meta_vec: self.block_meta_vec.clone(),
+            block_meta_offset,
+            max_version: self.max_version,
+        };
+
+        SsTable::create(table_meta, path.as_ref(), data)
     }
 }
+
+#[cfg(test)]
+mod tests {}

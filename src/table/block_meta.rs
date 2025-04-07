@@ -17,7 +17,7 @@ use crate::base::Result;
 use crate::base::{KeyBytes, Version};
 use bytes::{Buf, BufMut};
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BlockMeta {
     // Offset of this block in Sstable
     pub offset: usize,
@@ -66,7 +66,7 @@ impl BlockMeta {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BlockMetaVec(Vec<BlockMeta>);
 
 impl BlockMetaVec {

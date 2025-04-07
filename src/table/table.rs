@@ -12,4 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub struct SsTable {}
+use std::{fs::File, path::Path};
+
+use crate::base::{Error, KeyVec, Result, Version};
+
+use super::BlockMetaVec;
+
+pub type SsTableId = u64;
+
+pub struct SsTableMeta {
+    pub id: SsTableId,
+
+    pub first_key: KeyVec,
+    pub last_key: KeyVec,
+
+    pub block_meta_vec: BlockMetaVec,
+    pub block_meta_offset: usize,
+
+    pub max_version: Version,
+}
+
+struct SsTableFile {
+    file: Option<File>,
+    size: usize,
+}
+
+impl SsTableFile {
+    pub fn create(path: &Path, data: Vec<u8>) -> Result<Self> {
+        std::fs::write(path, &data)
+            .map_err(Error::io_error(format!("write to SsTable file {:?}", path)))?;
+        let file = File::options()
+            .read(true)
+            .write(false)
+            .open(path)
+            .map_err(Error::io_error(format!("open SsTable file {:?}", path)))?;
+        Ok(SsTableFile {
+            file: Some(file),
+            size: data.len(),
+        })
+    }
+}
+
+pub struct SsTable {
+    pub meta: SsTableMeta,
+    file: SsTableFile,
+}
+
+impl SsTable {
+    pub fn create(meta: SsTableMeta, path: &Path, data: Vec<u8>) -> Result<Self> {
+        Ok(Self {
+            meta,
+            file: SsTableFile::create(path, data)?,
+        })
+    }
+}
