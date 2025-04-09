@@ -12,10 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+use std::sync::Arc;
+
+use crate::{base::Result, memtable::Memtable};
+
+use super::{LsmEngineInner, LsmOptions};
+
+pub enum WriteBatchRecord<T: AsRef<[u8]>> {
+    Put(T, T),
+    Del(T),
+}
+
+pub struct LsmEngineState {
+    // current memtable
+    pub memtable: Memtable,
+}
+
+pub struct LsmEngine {
+    state: LsmEngineState,
+    inner: Arc<LsmEngineInner>,
+}
+
+impl LsmEngine {
+    /*
+    pub fn open(options: LsmOptions) -> Result<Self> {
+        Ok(Self {})
+    }
+    */
+}

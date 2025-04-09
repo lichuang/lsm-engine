@@ -14,3 +14,5 @@
 
 #[allow(clippy::module_inception)]
 mod memtable;
+
+pub use memtable::Memtable;

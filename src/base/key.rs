@@ -16,6 +16,7 @@ use std::fmt::Debug;
 
 use bytes::{Buf, BufMut, Bytes};
 
+pub type Version = u64;
 pub const VERSION_DEFAULT: Version = 0;
 
 pub struct Key<T: AsRef<[u8]>> {
@@ -23,7 +24,6 @@ pub struct Key<T: AsRef<[u8]>> {
     version: Version,
 }
 
-pub type Version = u64;
 pub type KeyBytes = Key<Bytes>;
 pub type KeySlice<'a> = Key<&'a [u8]>;
 pub type KeyVec = Key<Vec<u8>>;

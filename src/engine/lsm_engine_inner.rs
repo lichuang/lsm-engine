@@ -12,10 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+use bytes::Bytes;
+
+use crate::base::Result;
+use crate::base::Version;
+use crate::mvcc::MvccInner;
+
+use super::WriteBatchRecord;
+
+pub struct LsmEngineInner {
+    pub mvcc: MvccInner,
+}
+
+impl LsmEngineInner {
+    pub fn mvcc(&self) -> &MvccInner {
+        &self.mvcc
+    }
+
+    pub fn get_with_version(&self, key: &[u8], version: Version) -> Result<Option<Bytes>> {
+        Ok(None)
+    }
+
+    pub fn write_batch<T: AsRef<[u8]>>(&self, batch: &[WriteBatchRecord<T>]) -> Result<Version> {
+        Ok(0)
+    }
+}

@@ -34,6 +34,9 @@ pub enum Error {
 
     #[error("block meta error: {context}")]
     BlockError { context: String },
+
+    #[error("txn error: {context}")]
+    TxnError { context: String },
 }
 
 impl Error {
@@ -62,6 +65,12 @@ impl Error {
 
     pub fn block_meta_error(context: impl Into<String>) -> Self {
         Self::BlockError {
+            context: context.into(),
+        }
+    }
+
+    pub fn txn_error(context: impl Into<String>) -> Self {
+        Self::TxnError {
             context: context.into(),
         }
     }

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+mod lsm_engine;
+mod lsm_engine_inner;
+mod options;
+
+pub use lsm_engine::LsmEngine;
+pub use lsm_engine::WriteBatchRecord;
+pub use lsm_engine_inner::LsmEngineInner;
+pub use options::LsmOptions;

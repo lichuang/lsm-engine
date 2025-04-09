@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+mod mvcc_inner;
+mod txn;
+mod watermark;
+
+pub use mvcc_inner::MvccInner;
+pub use watermark::Watermark;
