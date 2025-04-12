@@ -12,4 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub struct LsmOptions {}
+pub struct LsmOptions {
+    // Block size in bytes
+    pub block_size: usize,
+
+    // number of block cache
+    pub block_cache_num: usize,
+}

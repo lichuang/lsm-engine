@@ -24,15 +24,18 @@ use crate::base::{KeyBytes, KeySlice};
 pub struct Memtable {
     map: Arc<SkipMap<KeyBytes, Bytes>>,
 
+    id: usize,
+
     // since `SkipMap` has no function such as `size()` to
     // return the total size of the container, we need to accumulate estimate size when writing data
     approximate_size: Arc<AtomicUsize>,
 }
 
 impl Memtable {
-    pub fn new() -> Self {
+    pub fn new(id: usize) -> Self {
         Self {
             map: Arc::new(SkipMap::new()),
+            id,
             approximate_size: Arc::new(AtomicUsize::new(0)),
         }
     }
@@ -63,6 +66,10 @@ impl Memtable {
     pub fn size(&self) -> usize {
         self.approximate_size.load(Ordering::Relaxed)
     }
+
+    pub fn id(&self) -> usize {
+        self.id
+    }
 }
 
 #[cfg(test)]
@@ -75,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_write_and_read() {
-        let table = Memtable::new();
+        let table = Memtable::new(1);
         let key = KeyBytes::new(Bytes::from("hello"), 1);
         let value = Bytes::from("world");
         assert!(table.write(key.to_key_slice(), value.as_ref()).is_ok());

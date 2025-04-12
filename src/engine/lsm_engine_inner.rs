@@ -12,19 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::path::Path;
+use std::sync::Arc;
+
 use bytes::Bytes;
+use parking_lot::RwLock;
 
 use crate::base::Result;
 use crate::base::Version;
 use crate::mvcc::MvccInner;
 
+use super::LsmEngineState;
+use super::LsmOptions;
 use super::WriteBatchRecord;
 
 pub struct LsmEngineInner {
+    pub state: Arc<RwLock<Arc<LsmEngineState>>>,
     pub mvcc: MvccInner,
 }
 
 impl LsmEngineInner {
+    pub fn open(path: impl AsRef<Path>, options: LsmOptions) -> Result<Self> {
+        let state = LsmEngineState::create();
+    }
+
     pub fn mvcc(&self) -> &MvccInner {
         &self.mvcc
     }
@@ -33,6 +44,7 @@ impl LsmEngineInner {
         Ok(None)
     }
 
+    // write batch records, return the committed version
     pub fn write_batch<T: AsRef<[u8]>>(&self, batch: &[WriteBatchRecord<T>]) -> Result<Version> {
         Ok(0)
     }

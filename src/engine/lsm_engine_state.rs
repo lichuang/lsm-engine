@@ -12,11 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
-mod compact;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+use std::sync::Arc;
+
+use crate::memtable::Memtable;
+
+pub struct LsmEngineState {
+    // current memtable
+    pub memtable: Arc<Memtable>,
+}
+
+impl LsmEngineState {
+    pub fn create() -> Self {
+        Self {
+            memtable: Arc::new(Memtable::new()),
+        }
+    }
+}

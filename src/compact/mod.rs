@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod base;
-mod block;
+#[allow(clippy::module_inception)]
 mod compact;
-mod engine;
-mod memtable;
-mod mvcc;
-mod table;
-mod wal;
+
+pub use compact::CompactionTask;

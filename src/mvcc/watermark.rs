@@ -44,7 +44,7 @@ impl Watermark {
         self.readers.len()
     }
 
-    pub fn watermark(&self) -> Option<u64> {
-        self.readers.first_key_value().map(|(ts, _)| *ts)
+    pub fn watermark(&self) -> Option<Version> {
+        self.readers.first_key_value().map(|(version, _)| *version)
     }
 }

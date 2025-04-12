@@ -82,6 +82,7 @@ impl Transaction {
     }
 
     pub fn commit(&self) -> Result<()> {
+        // mark `committed` automatically
         self.committed
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
             .expect("cannot operate on committed txn");
@@ -90,6 +91,7 @@ impl Transaction {
         if let Some(guard) = &self.key_hashes {
             let guard = guard.lock();
             let (write_set, read_set) = &*guard;
+            // do serializability check with txn after this transctions
             if !write_set.is_empty() {
                 let committed_txns = self.inner.mvcc().committed_txns.lock();
                 for (_, txn) in committed_txns.range((self.read_version + 1)..) {
@@ -101,6 +103,7 @@ impl Transaction {
                 }
             }
         }
+        // commit all the modifications
         let batch = self
             .storage
             .iter()
@@ -118,6 +121,7 @@ impl Transaction {
             return Ok(());
         }
 
+        // save write set of committed version
         let mut committed_txns = self.inner.mvcc().committed_txns.lock();
         // safe to unwrap
         let mut key_hashes = self.key_hashes.as_ref().unwrap().lock();
@@ -130,6 +134,10 @@ impl Transaction {
                 commit_version,
             },
         );
+        // assert there is no data of this version committed before
+        assert!(old_data.is_none());
+
+        // remove outage data
         let watermark = self.inner.mvcc().watermark();
         while let Some(entry) = committed_txns.first_entry() {
             if watermark >= *entry.key() {

@@ -37,8 +37,17 @@ pub struct MvccInner {
 }
 
 impl MvccInner {
-    /// All ts (strictly) below this version can be garbage collected.
-    pub fn watermark(&self) -> u64 {
+    pub fn new(init_version: Version) -> Self {
+        Self {
+            write_lock: Mutex::new(()),
+            commit_lock: Mutex::new(()),
+            version: Arc::new(Mutex::new((init_version, Watermark::new()))),
+            committed_txns: Arc::new(Mutex::new(BTreeMap::new())),
+        }
+    }
+
+    /// All version(strictly) below this version can be garbage collected.
+    pub fn watermark(&self) -> Version {
         let version = self.version.lock();
         version.1.watermark().unwrap_or(version.0)
     }

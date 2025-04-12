@@ -23,11 +23,6 @@ pub enum WriteBatchRecord<T: AsRef<[u8]>> {
     Del(T),
 }
 
-pub struct LsmEngineState {
-    // current memtable
-    pub memtable: Memtable,
-}
-
 pub struct LsmEngine {
     state: LsmEngineState,
     inner: Arc<LsmEngineInner>,

@@ -14,9 +14,12 @@
 
 mod lsm_engine;
 mod lsm_engine_inner;
+mod lsm_engine_state;
+mod manifest;
 mod options;
 
 pub use lsm_engine::LsmEngine;
 pub use lsm_engine::WriteBatchRecord;
 pub use lsm_engine_inner::LsmEngineInner;
+pub use lsm_engine_state::LsmEngineState;
 pub use options::LsmOptions;

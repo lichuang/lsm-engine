@@ -32,6 +32,12 @@ pub enum Error {
         error: bincode::Error,
     },
 
+    #[error("json ser/der error: {context}: {error}")]
+    JsonSerDerError {
+        context: String,
+        error: serde_json::Error,
+    },
+
     #[error("block meta error: {context}")]
     BlockError { context: String },
 
@@ -58,6 +64,13 @@ impl Error {
 
     pub fn serder_error(context: impl Into<String>) -> impl FnOnce(bincode::Error) -> Self {
         move |error| Self::SerDerError {
+            context: context.into(),
+            error,
+        }
+    }
+
+    pub fn json_serder_error(context: impl Into<String>) -> impl FnOnce(serde_json::Error) -> Self {
+        move |error| Self::JsonSerDerError {
             context: context.into(),
             error,
         }
