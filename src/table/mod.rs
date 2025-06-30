@@ -13,12 +13,14 @@
 // limitations under the License.
 
 mod block_meta;
+mod file;
 #[allow(clippy::module_inception)]
 mod table;
 mod table_builder;
 
 pub(crate) use block_meta::BlockMeta;
 pub(crate) use block_meta::BlockMetaVec;
+pub(crate) use file::FileObject;
 pub use table::SsTable;
 pub use table::SsTableId;
 pub use table::SsTableMeta;

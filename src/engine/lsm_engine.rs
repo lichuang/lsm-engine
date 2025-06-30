@@ -14,9 +14,9 @@
 
 use std::sync::Arc;
 
-use crate::{base::Result, memtable::Memtable};
-
-use super::{LsmEngineInner, LsmOptions};
+use super::LsmEngineInner;
+use super::LsmOptions;
+use crate::memtable::Memtable;
 
 pub enum WriteBatchRecord<T: AsRef<[u8]>> {
     Put(T, T),
@@ -24,14 +24,11 @@ pub enum WriteBatchRecord<T: AsRef<[u8]>> {
 }
 
 pub struct LsmEngine {
-    state: LsmEngineState,
     inner: Arc<LsmEngineInner>,
 }
 
 impl LsmEngine {
-    /*
-    pub fn open(options: LsmOptions) -> Result<Self> {
-        Ok(Self {})
-    }
-    */
+    // pub fn open(options: LsmOptions) -> Result<Self> {
+    // Ok(Self {})
+    // }
 }

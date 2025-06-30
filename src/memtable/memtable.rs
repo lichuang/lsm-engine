@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, atomic::AtomicUsize};
 
-use crate::base::Result;
+use anyhow::Result;
 use bytes::Bytes;
 use crossbeam_skiplist::SkipMap;
 
-use crate::base::{KeyBytes, KeySlice};
+use crate::base::KeyBytes;
+use crate::base::KeySlice;
 
 pub struct Memtable {
     map: Arc<SkipMap<KeyBytes, Bytes>>,
@@ -76,9 +78,8 @@ impl Memtable {
 mod tests {
     use bytes::Bytes;
 
-    use crate::base::KeyBytes;
-
     use super::Memtable;
+    use crate::base::KeyBytes;
 
     #[test]
     fn test_write_and_read() {

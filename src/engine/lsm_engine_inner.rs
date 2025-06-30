@@ -15,16 +15,15 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use anyhow::Result;
 use bytes::Bytes;
 use parking_lot::RwLock;
-
-use crate::base::Result;
-use crate::base::Version;
-use crate::mvcc::MvccInner;
 
 use super::LsmEngineState;
 use super::LsmOptions;
 use super::WriteBatchRecord;
+use crate::base::Version;
+use crate::mvcc::MvccInner;
 
 pub struct LsmEngineInner {
     pub state: Arc<RwLock<Arc<LsmEngineState>>>,
@@ -32,9 +31,11 @@ pub struct LsmEngineInner {
 }
 
 impl LsmEngineInner {
-    pub fn open(path: impl AsRef<Path>, options: LsmOptions) -> Result<Self> {
-        let state = LsmEngineState::create();
-    }
+    // pub fn open(path: impl AsRef<Path>, options: LsmOptions) -> Result<Self> {
+    // let state = LsmEngineState::create();
+    //
+    // Ok()
+    // }
 
     pub fn mvcc(&self) -> &MvccInner {
         &self.mvcc

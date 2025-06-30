@@ -17,17 +17,15 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
+use anyhow::Result;
 use bytes::Bytes;
 use crossbeam_skiplist::SkipMap;
 use parking_lot::Mutex;
 
-use crate::base::Error;
-use crate::base::Result;
+use super::mvcc_inner::CommittedTxn;
 use crate::base::Version;
 use crate::engine::LsmEngineInner;
 use crate::engine::WriteBatchRecord;
-
-use super::mvcc_inner::CommittedTxn;
 
 const EMPTY_VALUE: Bytes = Bytes::new();
 
@@ -126,14 +124,11 @@ impl Transaction {
         // safe to unwrap
         let mut key_hashes = self.key_hashes.as_ref().unwrap().lock();
         let (write_set, _) = &mut *key_hashes;
-        let old_data = committed_txns.insert(
+        let old_data = committed_txns.insert(commit_version, CommittedTxn {
+            key_hashes: std::mem::take(write_set),
+            read_version: self.read_version,
             commit_version,
-            CommittedTxn {
-                key_hashes: std::mem::take(write_set),
-                read_version: self.read_version,
-                commit_version,
-            },
-        );
+        });
         // assert there is no data of this version committed before
         assert!(old_data.is_none());
 

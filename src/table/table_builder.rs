@@ -14,23 +14,20 @@
 
 use std::path::Path;
 
-use crate::base::Error;
-use crate::base::KeySlice;
-use crate::base::KeyVec;
-use crate::base::Result;
-use crate::base::VERSION_DEFAULT;
-use crate::base::Version;
-use crate::block::BlockBuilder;
+use anyhow::Result;
 use bytes::BufMut;
 use tinysearch_cuckoofilter::CuckooFilter;
-
-use crate::table::SsTable;
-
-use crate::table::BlockMeta;
 
 use super::BlockMetaVec;
 use super::SsTableId;
 use super::SsTableMeta;
+use crate::base::KeySlice;
+use crate::base::KeyVec;
+use crate::base::VERSION_DEFAULT;
+use crate::base::Version;
+use crate::block::BlockBuilder;
+use crate::table::BlockMeta;
+use crate::table::SsTable;
 
 pub struct SsTableBuilder {
     block_builder: BlockBuilder,
@@ -71,9 +68,7 @@ impl SsTableBuilder {
         }
         self.max_version = std::cmp::max(self.max_version, key.version());
 
-        self.filter
-            .add(&farmhash::fingerprint32(key.key_ref()))
-            .map_err(Error::filter_error("insert key into filter error"))?;
+        self.filter.add(&farmhash::fingerprint32(key.key_ref()))?;
 
         // if the block is not full, `add` return true
         if self.block_builder.add(key, value) {
@@ -120,8 +115,7 @@ impl SsTableBuilder {
 
         // save filter data
         let export_filter = self.filter.export();
-        let filter_data = bincode::serialize(&export_filter)
-            .map_err(Error::serder_error("serialize filter data error"))?;
+        let filter_data = bincode::serialize(&export_filter)?;
         data.extend(&filter_data);
         let filter_offset = data.len();
         data.put_u32(filter_offset as u32);

@@ -12,18 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::base::{Error, Result};
-use crate::compact::CompactionTask;
-use bytes::{Buf, BufMut};
-use serde::{Deserialize, Serialize};
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::Read;
+use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
+use anyhow::Result;
+use bytes::Buf;
+use bytes::BufMut;
 use parking_lot::Mutex;
+use serde::Deserialize;
+use serde::Serialize;
 
 use super::LsmEngineState;
+use crate::compact::CompactionTask;
 
 const MANIFEST: &str = "MANIFEST";
 
@@ -60,22 +64,16 @@ impl Manifest {
                     .read(true)
                     .create_new(true)
                     .write(true)
-                    .open(path)
-                    .map_err(Error::io_error("failed to create manifest"))?,
+                    .open(path)?,
             )),
         })
     }
 
     fn recover(path: impl AsRef<Path>) -> Result<(Self, Vec<ManifestRecord>)> {
-        let mut file = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .open(path)
-            .map_err(Error::io_error("failed to recover manifest"))?;
+        let mut file = OpenOptions::new().read(true).append(true).open(path)?;
 
         let mut buf = Vec::new();
-        file.read_to_end(&mut buf)
-            .map_err(Error::io_error("failed to recover manifest"))?;
+        file.read_to_end(&mut buf)?;
         let mut buf_ptr = buf.as_slice();
         let mut records = Vec::new();
         while buf_ptr.has_remaining() {
@@ -96,12 +94,9 @@ impl Manifest {
         let mut file = self.file.lock();
         let (buf_size, buf) = record.encode()?;
 
-        file.write_all(&(buf_size as u64).to_be_bytes())
-            .map_err(Error::io_error("failed to add record"))?;
-        file.write_all(&buf)
-            .map_err(Error::io_error("failed to add record"))?;
-        file.sync_all()
-            .map_err(Error::io_error("failed to add record"))?;
+        file.write_all(&(buf_size as u64).to_be_bytes())?;
+        file.write_all(&buf)?;
+        file.sync_all();
         Ok(())
     }
 }
@@ -110,8 +105,7 @@ impl ManifestRecord {
     // manifest record format:
     // buf len[u64] + json(record) + crc32 of json(record)
     pub(crate) fn encode(&self) -> Result<(usize, Vec<u8>)> {
-        let mut buf =
-            serde_json::to_vec(self).map_err(Error::json_serder_error("failed to add record"))?;
+        let mut buf = serde_json::to_vec(self)?;
         let hash = crc32fast::hash(&buf);
         let buf_size = buf.len();
         buf.put_u32(hash);
@@ -122,8 +116,7 @@ impl ManifestRecord {
     pub(crate) fn decode(mut buf: &[u8]) -> Result<(Self, &[u8])> {
         let buf_size = buf.get_u64();
         let slice = &buf[..buf_size as usize];
-        let json = serde_json::from_slice::<ManifestRecord>(slice)
-            .map_err(Error::json_serder_error("failed to decode manifest record"))?;
+        let json = serde_json::from_slice::<ManifestRecord>(slice)?;
         buf.advance(buf_size as usize);
         let checksum = buf.get_u32();
         if checksum != crc32fast::hash(slice) {}

@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::base::Error;
-use crate::base::Result;
-use crate::base::{KeyBytes, Version};
-use bytes::{Buf, BufMut};
+use anyhow::Result;
+use anyhow::bail;
+use bytes::Buf;
+use bytes::BufMut;
+
+use crate::base::KeyBytes;
+use crate::base::Version;
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BlockMeta {
@@ -116,7 +119,7 @@ impl BlockMetaVec {
         }
         let version = buf.get_u64();
         if buf.get_u32() != checksum {
-            Err(Error::block_meta_error("BlockMeta checksum mismatched"))
+            bail!("BlockMeta checksum mismatched")
         } else {
             Ok((version, BlockMetaVec(meta_vec)))
         }
@@ -125,12 +128,13 @@ impl BlockMetaVec {
 
 #[cfg(test)]
 mod tests {
-    use crate::base::Result;
-    use bytes::{Buf, Bytes};
-
-    use crate::{base::KeyBytes, table::BlockMetaVec};
+    use anyhow::Result;
+    use bytes::Buf;
+    use bytes::Bytes;
 
     use super::BlockMeta;
+    use crate::base::KeyBytes;
+    use crate::table::BlockMetaVec;
 
     #[test]
     fn test_encode_decode_block_meta() {

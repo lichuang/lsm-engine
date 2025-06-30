@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::base::Error;
-use crate::base::KeySlice;
-use crate::base::Result;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::BufWriter;
+use std::io::Write;
+use std::path::Path;
+use std::sync::Arc;
+
+use anyhow::Result;
 use bytes::BufMut;
 use parking_lot::Mutex;
-use std::{
-    fs::{File, OpenOptions},
-    io::{BufWriter, Write},
-    path::Path,
-    sync::Arc,
-};
+
+use crate::base::KeySlice;
 
 pub struct Wal {
     file: Arc<Mutex<BufWriter<File>>>,
@@ -38,11 +39,7 @@ impl Wal {
                     .create_new(true)
                     .write(true)
                     .read(true)
-                    .open(path)
-                    .map_err(Error::io_error(format!(
-                        "fail to open WAL file {:?}",
-                        wal_path
-                    )))?,
+                    .open(path)?,
             ))),
             path: wal_path,
         })
@@ -59,20 +56,9 @@ impl Wal {
             Self::write_record(&mut buf, key, value);
         }
         let path = &self.path;
-        file.write_all(&(buf.len() as u32).to_be_bytes())
-            .map_err(Error::io_error(format!(
-                "failed to write WAL file {} header",
-                path
-            )))?;
-        file.write_all(&buf).map_err(Error::io_error(format!(
-            "failed to write WAL file {} content",
-            path
-        )))?;
-        file.write_all(&crc32fast::hash(&buf).to_be_bytes())
-            .map_err(Error::io_error(format!(
-                "failed to write WAL file {} hash",
-                path
-            )))?;
+        file.write_all(&(buf.len() as u32).to_be_bytes())?;
+        file.write_all(&buf)?;
+        file.write_all(&crc32fast::hash(&buf).to_be_bytes())?;
         Ok(())
     }
 

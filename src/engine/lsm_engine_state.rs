@@ -24,7 +24,7 @@ pub struct LsmEngineState {
 impl LsmEngineState {
     pub fn create() -> Self {
         Self {
-            memtable: Arc::new(Memtable::new()),
+            memtable: Arc::new(Memtable::new(0)),
         }
     }
 }
